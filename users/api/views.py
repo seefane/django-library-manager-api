@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from rest_framework import status
@@ -52,7 +53,7 @@ class loginAuthtoken(ObtainAuthToken):
         })
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def editUserinfo(request,pk):
+def editUserinfo(request,userpk):
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -67,14 +68,20 @@ def editUserinfo(request,pk):
     serializer_errors={}
     if student_serializer.is_valid():
         student_serializer_is_valid = True
-        student_serializer.save()
+
 
     serializer_errors.update(student_serializer.errors)
     if user_serializer.is_valid():
+        password = user_serializer.validated_data.get('password')
+        user_serializer.validated_data['password'] = make_password(password)
         user_serializer_is_valid =True
-        user_serializer.save()
+
     serializer_errors.update(user_serializer.errors)
     if user_serializer_is_valid and student_serializer_is_valid:
+        student_serializer.save()
+        user_serializer.save()
+        user.is_active=True
+        user.save()
         response["success"] = "Update completed successfully"
         return Response(data=response)
     return Response(serializer_errors, status=status.HTTP_400_BAD_REQUEST)

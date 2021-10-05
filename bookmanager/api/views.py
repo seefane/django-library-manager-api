@@ -21,6 +21,9 @@ def is_student(obj, req):
 
 @api_view(['GET'])
 def api_book_list(request):
+    """
+    Return a list of all the available books.
+    """
     if request.method == 'GET':
         books = Book.objects.all()
         serializer = BookSerializer(books, many=True)
@@ -28,10 +31,13 @@ def api_book_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def api_reserve_book(request,pk):
+def api_reserve_book(request,bookpk):
+    """
+        Reserve book for collection.
+    """
     user = request.user
     try:
-        book = Book.objects.get(pk=pk)
+        book = Book.objects.get(pk=bookpk)
     except Book.DoesNotExist:
         return HttpResponse(status=404)
     if book.available_quantity > 0:
@@ -51,11 +57,14 @@ def api_reserve_book(request,pk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def api_return_book(request,pk):
+def api_return_book(request,bookpk):
+    """
+        Return book.
+    """
     user = request.user
     try:
-        user_reserved_book = ReservedBook.objects.filter(student=user).filter(Q(status="outstanding") | Q(status='return pending')).filter(reserved_book=pk)
-        book = Book.objects.get(pk=pk)
+        user_reserved_book = ReservedBook.objects.filter(student=user).filter(Q(status="outstanding") | Q(status='return pending')).filter(reserved_book=bookpk)
+        book = Book.objects.get(pk=bookpk)
 
     except ReservedBook.DoesNotExist and Book.DoesNotExist:
         return HttpResponse(status=404)
@@ -73,12 +82,12 @@ def api_return_book(request,pk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated,IsAdminUser])
-def api_confrim_return(request,pk,std):
+def api_confrim_return(request,bookpk,studendpk):
     user = request.user
     try:
-        student = User.objects.get(username=std)
+        student = User.objects.get(username=studendpk)
         user_reserved_book = ReservedBook.objects.filter(student=student).filter(Q(status="outstanding") | Q(status='return pending')).filter(reserved_book=pk)
-        book = Book.objects.get(pk=pk)
+        book = Book.objects.get(pk=bookpk)
 
     except ReservedBook.DoesNotExist and Book.DoesNotExist and User.DoesNotExist:
         return  HttpResponse(status=404)
@@ -97,6 +106,9 @@ def api_confrim_return(request,pk,std):
 
 
 class ApiUserReservedBooks(ListAPIView):
+    """
+        Return a list of all books reserved by a student.
+    """
 
     authentication_classes = [TokenAuthentication,SessionAuthentication]
     permission_classes = [IsAuthenticated]
@@ -109,6 +121,7 @@ class ApiUserReservedBooks(ListAPIView):
         return self.request.user.reservedbook_set.all().order_by('-issue_date')
 
 class ApiOutstandingBooks(ListAPIView):
+
 
     authentication_classes = [TokenAuthentication,SessionAuthentication]
     permission_classes = [IsAuthenticated,IsAdminUser]

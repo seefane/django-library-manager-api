@@ -7,6 +7,6 @@ from . import views
 urlpatterns = [
     path('registration/',views.registration_view,name='registration'),
     path('login/',views.loginAuthtoken.as_view(),name='login'),
-    path('update-details/<int:pk>/',views.editUserinfo,name='editUserinfo'),
+    path('update-details/<int:userpk>/',views.editUserinfo,name='editUserinfo'),
 
 ]
