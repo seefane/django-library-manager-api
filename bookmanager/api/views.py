@@ -121,8 +121,6 @@ class ApiUserReservedBooks(ListAPIView):
         return self.request.user.reservedbook_set.all().order_by('-issue_date')
 
 class ApiOutstandingBooks(ListAPIView):
-
-
     authentication_classes = [TokenAuthentication,SessionAuthentication]
     permission_classes = [IsAuthenticated,IsAdminUser]
     serializer_class =  ReservedBookSerializer
