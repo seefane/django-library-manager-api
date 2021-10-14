@@ -13,10 +13,10 @@ class Book(models.Model):
     max_days_available = models.IntegerField(default=1)
     book_cover = models.CharField(max_length=200)
     department_choices = [
-        ("education", 'Education'),
-        ("computer science", 'Computer Science'),
-        ("mathematics", 'Mathematics'),
-        ("engineering", 'Engineering'),
+        ("Education", 'Education'),
+        ("Computer Science", 'Computer Science'),
+        ("Mathematics", 'Mathematics'),
+        ("Engineering", 'Engineering'),
     ]
     department = models.CharField(
         max_length=50,
@@ -38,15 +38,15 @@ class ReservedBook(models.Model):
     issue_date = models.DateTimeField(default=timezone.now)
     due_date = models.DateTimeField(default=timezone.now() +timedelta(1))
     returned_date=models.DateTimeField(default=timezone.now() +timedelta(1))
-    IS_BookNumber = models.CharField(max_length=50,null=True)
+    IS_BookNumber = models.CharField(max_length=50,default='qrcode')
     status_choices = [
-        ('collection pending','Collection Pending'),
-        ("outstanding","Outstanding"),
-        ("returned","Returned"),
-        ("return pending","Return Pending")]
+    
+        ("Reserved","Reserved"),
+        ("Returned","Returned"),]
+        
     status = models.CharField(
     max_length=50,
     choices=status_choices,
-    default="outstanding",
+    default="Reserved",
     )
 

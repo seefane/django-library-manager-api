@@ -9,6 +9,9 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+
+
+
 import os
 from pathlib import Path
 import dj_database_url
@@ -30,9 +33,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DJANGO_DEBUG')
 
-ALLOWED_HOSTS = ["restlibrarymanager.herokuapp.com","127.0.0.1"]
+ALLOWED_HOSTS = ["restlibrarymanager.herokuapp.com","127.0.0.1","10.0.2.2"]
 
 
 # Application definition
@@ -46,9 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_swagger',
+ 
+    'drf_yasg',
+
 
 ]
 REST_FRAMEWORK = {
@@ -100,7 +106,10 @@ WSGI_APPLICATION = 'librarymanager.wsgi.application'
 
 DATABASES = {
 
-
+# 'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
 'default': {
 
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -119,6 +128,19 @@ DATABASES = {
 
 }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        "api_key": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+
+            "description": "Token authorization" + "\n" + "Value example :Token 535e5de454ff59f1e42c82af19667a672718b4e1",
+
+        },
+    },
+    'USE_SESSION_AUTH': False
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

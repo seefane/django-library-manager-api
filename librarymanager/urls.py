@@ -13,26 +13,33 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+
 from django.contrib import admin
 from django.urls import path, include
 
-from django.views.generic import TemplateView
-from rest_framework.schemas import get_schema_view
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="LibraryManager API",
+      default_version='v1',
+      description="REST API for LibraryManager",
+
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),)
+
 
 
 urlpatterns = [
-    path('schema', get_schema_view(
-        title="LibraryManager API",
-        description="API for library management"
-    ), name='openapi-schema'),
-    path('', TemplateView.as_view(
-        template_name='swagger_doc.html',
-        extra_context={'schema_url': 'openapi-schema'}
-    ), name='swagger-ui'),
-
-
+    
+    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('admin/', admin.site.urls),
     path('api/user/',include("users.api.urls")),
-    path('api/library/',include("bookmanager.api.urls"))
-
+    path('api/library/',include("bookmanager.api.urls")),
 ]

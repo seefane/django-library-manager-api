@@ -4,7 +4,7 @@ from rest_framework import status,filters
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.response import  Response
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.generics import ListAPIView
 from .serializers import BookSerializer, ReservedBookSerializer
 from django.contrib.auth.models import User
@@ -42,7 +42,7 @@ def api_reserve_book(request,bookpk):
         return HttpResponse(status=404)
     if book.available_quantity > 0:
         reservedBook = ReservedBook(reserved_book=book, student=user)
-        user_reserved_books = ReservedBook.objects.filter(student=user).filter(reserved_book=book.id)
+        user_reserved_books = ReservedBook.objects.filter(student=user).filter(reserved_book=book.id).filter(status='Reserved')
         if user_reserved_books.count()==0:
             serializer = ReservedBookSerializer(reservedBook,data=request.data)
             if serializer.is_valid():
@@ -57,18 +57,20 @@ def api_reserve_book(request,bookpk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication,SessionAuthentication])
 def api_return_book(request,bookpk):
     """
         Return book.
     """
     user = request.user
+    
     try:
-        user_reserved_book = ReservedBook.objects.filter(student=user).filter(Q(status="outstanding") | Q(status='return pending')).filter(reserved_book=bookpk)
         book = Book.objects.get(pk=bookpk)
-
+        user_reserved_book = ReservedBook.objects.filter(
+            student=user).filter(status="Reserved").filter(reserved_book=book)
     except ReservedBook.DoesNotExist and Book.DoesNotExist:
         return HttpResponse(status=404)
-
+    print(user_reserved_book)
     if user_reserved_book.count()>0:
         serializer = ReservedBookSerializer(user_reserved_book.first(), data=request.data)
         if is_student(user_reserved_book.first(),request):
@@ -82,11 +84,12 @@ def api_return_book(request,bookpk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated,IsAdminUser])
+@authentication_classes([TokenAuthentication,SessionAuthentication])
 def api_confrim_return(request,bookpk,studendpk):
     user = request.user
     try:
         student = User.objects.get(username=studendpk)
-        user_reserved_book = ReservedBook.objects.filter(student=student).filter(Q(status="outstanding") | Q(status='return pending')).filter(reserved_book=pk)
+        user_reserved_book = ReservedBook.objects.filter(student=student).filter(status="Reserved").filter(reserved_book=pk)
         book = Book.objects.get(pk=bookpk)
 
     except ReservedBook.DoesNotExist and Book.DoesNotExist and User.DoesNotExist:
@@ -118,7 +121,7 @@ class ApiUserReservedBooks(ListAPIView):
     filterset_fields = ['title', 'description', 'student']
 
     def get_queryset(self):
-        return self.request.user.reservedbook_set.all().order_by('-issue_date')
+        return ReservedBook.objects.filter(student=self.request.user).filter(status="Reserved")
 
 class ApiOutstandingBooks(ListAPIView):
     authentication_classes = [TokenAuthentication,SessionAuthentication]
@@ -129,7 +132,7 @@ class ApiOutstandingBooks(ListAPIView):
     filterset_fields = ['title', 'description', 'student']
 
     def get_queryset(self):
-            return ReservedBook.objects.filter(Q(status="outstanding") | Q(status='return pending'))
+            return ReservedBook.objects.filter(status="Reserved")
 
 
 
