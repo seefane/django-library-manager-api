@@ -35,13 +35,14 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG')
 
-ALLOWED_HOSTS = ["restlibrarymanager.herokuapp.com","127.0.0.1","10.0.2.2"]
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(' ')
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'users.apps.UsersConfig',
+    "corsheaders",
     'bookmanager.apps.BookmanagerConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,7 +61,7 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        
     ],
 
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -72,6 +73,7 @@ REST_FRAMEWORK = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -80,6 +82,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
+CORS_ALLOWED_ORIGIN_REGEXES = os.environ.get('DJANGO_CORS_ALLOWED_ORIGIN_REGEXES').split(' ')
 ROOT_URLCONF = 'librarymanager.urls'
 
 TEMPLATES = [

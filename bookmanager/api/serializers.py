@@ -19,6 +19,7 @@ class ReservedBookSerializer(serializers.ModelSerializer):
         # fields = ['reserved_book',title,book_cover,'issue_date','due_date','student','returned_date']
         fields = '__all__'
 
+   
     def get_student_details(self,obj):
         return obj.student.email
     def get_reserved_book(self,obj):

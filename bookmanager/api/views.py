@@ -20,20 +20,28 @@ def is_student(obj, req):
     return False
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication,SessionAuthentication])
 def api_book_list(request):
     """
     Return a list of all the available books.
     """
+    user = request.user
+    user_reserved_books = ReservedBook.objects.filter(student=user).filter(status='Reserved')
+    bookid = [reserve.reserved_book.id for reserve in user_reserved_books]
     if request.method == 'GET':
-        books = Book.objects.all()
+       
+        books = Book.objects.exclude(id__in=bookid)
+        
         serializer = BookSerializer(books, many=True)
         return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication,SessionAuthentication])
 def api_reserve_book(request,bookpk):
     """
-        Reserve book for collection.
+        Reserve book for collection.S
     """
     user = request.user
     try:
@@ -44,16 +52,16 @@ def api_reserve_book(request,bookpk):
         reservedBook = ReservedBook(reserved_book=book, student=user)
         user_reserved_books = ReservedBook.objects.filter(student=user).filter(reserved_book=book.id).filter(status='Reserved')
         if user_reserved_books.count()==0:
+
             serializer = ReservedBookSerializer(reservedBook,data=request.data)
             if serializer.is_valid():
                 serializer.save()
-
                 book.decrement()
                 book.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'Response':'Book already reserved'}, status=status.HTTP_403_FORBIDDEN)
-    return Response({'Response':'The book is not available at the moment'},status=status.HTTP_404_NOT_FOUND)
+        return Response({'message':'Book already reserved'}, status=status.HTTP_403_FORBIDDEN)
+    return Response({'message':'The book is not available at the moment'},status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -70,17 +78,21 @@ def api_return_book(request,bookpk):
             student=user).filter(status="Reserved").filter(reserved_book=book)
     except ReservedBook.DoesNotExist and Book.DoesNotExist:
         return HttpResponse(status=404)
-    print(user_reserved_book)
+    print("request ",request.data)
     if user_reserved_book.count()>0:
-        serializer = ReservedBookSerializer(user_reserved_book.first(), data=request.data)
+        serializer = ReservedBookSerializer(user_reserved_book.first(), {'status': 'Returned'})
         if is_student(user_reserved_book.first(),request):
             if serializer.is_valid():
+                
                 serializer.save()
+
                 book.increment()
                 book.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    return Response({'response': 'You are not allowed to return this book'},status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'message': 'You are not allowed to return this book'},status=status.HTTP_403_FORBIDDEN)
+
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated,IsAdminUser])
